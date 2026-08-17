@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import sqlite3
 
 import pandas as pd
@@ -7,11 +8,7 @@ import streamlit as st
 
 from src.config import load_settings
 from src.database import connect_database, initialize_schema
-from src.database.deployment import (
-    deployment_seed_fingerprint,
-    deployment_seed_is_current,
-    materialize_deployment_seed,
-)
+from src.database import deployment as deployment_helpers
 from src.database.repository import (
     DEFAULT_EXPORT_FIELDS,
     EXPORT_FIELD_LABELS,
@@ -35,6 +32,22 @@ from src.presentation import (
     format_address,
     prospect_type_breakdown,
 )
+
+
+# Streamlit can rerun app.py in a process that still has the deployment helper
+# module from the previous Git revision cached. Reload only when a newly added
+# helper is absent, keeping data-only deploys compatible with hot reloads.
+_DEPLOYMENT_HELPERS = (
+    "deployment_seed_fingerprint",
+    "deployment_seed_is_current",
+    "materialize_deployment_seed",
+)
+if not all(hasattr(deployment_helpers, name) for name in _DEPLOYMENT_HELPERS):
+    deployment_helpers = importlib.reload(deployment_helpers)
+
+deployment_seed_fingerprint = deployment_helpers.deployment_seed_fingerprint
+deployment_seed_is_current = deployment_helpers.deployment_seed_is_current
+materialize_deployment_seed = deployment_helpers.materialize_deployment_seed
 
 
 settings = load_settings()
