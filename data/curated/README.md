@@ -10,7 +10,9 @@ The 2026-08-17 verification passes prioritize existing high-ranked prospects wit
 contact details. The second pass adds public contact channels for 100 additional exact-match
 organizations, including verified facility variants and store locations. The third pass adds
 69 more exact-match organizations using official company and store pages, government records,
-and current trade-verification sources. Official organization pages are assigned source
+and current trade-verification sources. The fourth pass adds 111 exact-match enrichments plus
+one newly verified Fall River manufacturer, drawing primarily from current official contact and
+location pages and current government registries. Official organization pages are assigned source
 strength 4 and official government records are assigned source strength 5. Older official
 documents retain their publication dates so the application's freshness checks can flag them
 appropriately.
@@ -31,6 +33,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-17_round3.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-17_round3.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-17_round4.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-17_round4.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
