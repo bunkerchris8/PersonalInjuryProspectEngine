@@ -6,6 +6,7 @@ from pathlib import Path
 
 from src.config import PROJECT_ROOT, load_settings
 from src.database import connect_database, initialize_schema
+from src.database.deployment import build_deployment_seed
 from src.ingestion.census_acs import import_acs_massachusetts_places
 from src.ingestion.census_geocoder import (
     geocode_pending_organizations,
@@ -34,6 +35,11 @@ def _parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "bootstrap", help="Initialize and import the included official-page sample records."
     )
+    deployment_seed = subparsers.add_parser(
+        "build-deployment-seed",
+        help="Build a sanitized, compressed database snapshot for Git deployment.",
+    )
+    deployment_seed.add_argument("--output", type=Path)
 
     for name in ("import-organizations", "import-contacts", "import-events"):
         command = subparsers.add_parser(name)
@@ -71,6 +77,18 @@ def _parser() -> argparse.ArgumentParser:
 def main() -> None:
     args = _parser().parse_args()
     settings = load_settings()
+    if args.command == "build-deployment-seed":
+        output = args.output or settings.deployment_seed_path
+        if output is None:
+            raise ValueError("No deployment seed output path is configured.")
+        stats = build_deployment_seed(settings.database_path, output)
+        print(
+            f"Built {output}: {stats.organizations} organizations, "
+            f"{stats.contacts} contacts, {stats.events} events, "
+            f"{stats.sources} sources, {stats.assertions} assertions."
+        )
+        return
+
     connection = connect_database(settings.database_path)
     initialize_schema(connection)
     try:

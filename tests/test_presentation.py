@@ -53,6 +53,36 @@ def test_only_criteria_level_filters_prospects():
     assert filtered["canonical_name"].tolist() == ["Distant but complete"]
 
 
+def test_prospect_search_matches_names_locations_and_contacts():
+    frame = pd.DataFrame(
+        [
+            {
+                "canonical_name": "Bridgewater Builders",
+                "city": "Bridgewater",
+                "zip": "02324",
+                "primary_contact_name": "Alex Rivera",
+                "data_quality_score": 0.8,
+                "adjusted_priority": 50,
+            },
+            {
+                "canonical_name": "Plymouth Electric",
+                "city": "Plymouth",
+                "zip": "02360",
+                "primary_contact_name": "Morgan Lee",
+                "data_quality_score": 0.9,
+                "adjusted_priority": 60,
+            },
+        ]
+    )
+
+    assert filter_prospects(frame, "Not much", "alex")["canonical_name"].tolist() == [
+        "Bridgewater Builders"
+    ]
+    assert filter_prospects(frame, "Not much", "02360")["canonical_name"].tolist() == [
+        "Plymouth Electric"
+    ]
+
+
 def test_breakdown_always_includes_the_full_scale():
     frame = pd.DataFrame({"data_quality_score": [0.1, 0.55, 0.76, 0.95]})
     breakdown = criteria_breakdown(frame)

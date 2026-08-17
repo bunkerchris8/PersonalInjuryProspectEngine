@@ -16,6 +16,7 @@ DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "settings.toml"
 class Settings:
     app_name: str
     database_path: Path
+    deployment_seed_path: Path | None
     default_max_radius_miles: float
     allowed_max_radius_miles: float
     center_name: str
@@ -72,9 +73,16 @@ def load_settings(config_path: Path | None = None) -> Settings:
     database_value = os.getenv(
         "PROSPECT_ENGINE_DATABASE_PATH", app["database_path"]
     )
+    deployment_seed_value = os.getenv(
+        "PROSPECT_ENGINE_DEPLOYMENT_SEED_PATH",
+        app.get("deployment_seed_path", ""),
+    ).strip()
     return Settings(
         app_name=app["name"],
         database_path=_resolve_path(database_value),
+        deployment_seed_path=(
+            _resolve_path(deployment_seed_value) if deployment_seed_value else None
+        ),
         default_max_radius_miles=radius,
         allowed_max_radius_miles=allowed_radius,
         center_name=geography["center_name"],

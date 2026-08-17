@@ -11,6 +11,19 @@ from src.scoring.service import score_all_organizations
 SAMPLES = PROJECT_ROOT / "data" / "raw"
 
 
+def test_streamlit_empty_database_explains_missing_deployment_data(
+    settings, monkeypatch
+):
+    monkeypatch.setenv("PROSPECT_ENGINE_DATABASE_PATH", str(settings.database_path))
+    monkeypatch.setenv("PROSPECT_ENGINE_DEPLOYMENT_SEED_PATH", "")
+
+    app = AppTest.from_file(PROJECT_ROOT / "app.py", default_timeout=15).run()
+
+    assert not app.exception
+    assert app.error[0].value == "No prospect data is loaded."
+    assert "ignored local SQLite database" in app.markdown[0].value
+
+
 def test_streamlit_app_features_and_interactions(
     connection, settings, monkeypatch
 ):
@@ -96,6 +109,12 @@ def test_streamlit_app_features_and_interactions(
     app.multiselect[0].set_value(["prospect_name", "organization_phone"]).run()
     assert app.multiselect[0].value == ["prospect_name", "organization_phone"]
     assert not app.exception
+
+    app.sidebar.text_input[0].set_value("no matching prospect").run()
+    assert app.info[0].value == "No prospects match the current search and criteria filter."
+    next(button for button in app.button if button.label == "Clear filters").click().run()
+    assert not app.exception
+    assert app.metric[0].value == "3"
 
 
 def test_streamlit_review_suppression_and_export_controls(

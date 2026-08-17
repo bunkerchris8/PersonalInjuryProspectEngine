@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import sqlite3
+
 import pandas as pd
 import streamlit as st
 
 from src.config import load_settings
 from src.database import connect_database, initialize_schema
+from src.database.deployment import materialize_deployment_seed
 from src.database.repository import (
     DEFAULT_EXPORT_FIELDS,
     EXPORT_FIELD_LABELS,
@@ -31,14 +34,24 @@ from src.presentation import (
 
 
 settings = load_settings()
-st.set_page_config(page_title=settings.app_name, page_icon=None, layout="wide")
+st.set_page_config(
+    page_title=settings.app_name,
+    page_icon=":material/assured_workload:",
+    layout="wide",
+)
 
 
 @st.cache_resource
-def database_connection(database_path: str):
+def database_connection(database_path: str, seed_archive_path: str | None):
+    loaded_from_seed = materialize_deployment_seed(database_path, seed_archive_path)
     connection = connect_database(database_path)
     initialize_schema(connection)
-    return connection
+    return connection, loaded_from_seed
+
+
+def reset_prospect_filters() -> None:
+    st.session_state.minimum_criteria = "Not much"
+    st.session_state.prospect_search = ""
 
 
 def has_value(value: object) -> bool:
@@ -51,10 +64,20 @@ st.caption(
     "victim targeting, or legal-ethics determination is performed."
 )
 
+flash_message = st.session_state.pop("flash_message", None)
+if flash_message:
+    st.toast(flash_message, icon=":material/check_circle:")
+
 with st.sidebar:
-    st.header("Criteria fulfilled")
+    st.header("Find prospects")
+    prospect_search = st.text_input(
+        "Search",
+        key="prospect_search",
+        placeholder="Name, city, ZIP, or contact",
+        icon=":material/search:",
+    )
     minimum_criteria = st.select_slider(
-        "Show prospects with at least",
+        "Minimum criteria fulfilled",
         options=CRITERIA_LEVELS,
         value="Not much",
         key="minimum_criteria",
@@ -65,10 +88,69 @@ with st.sidebar:
     )
     st.caption("Not much means fewer criteria are documented; many means nearly all are.")
 
-connection = database_connection(str(settings.database_path))
+seed_archive_path = (
+    str(settings.deployment_seed_path) if settings.deployment_seed_path else None
+)
+try:
+    connection, loaded_from_seed = database_connection(
+        str(settings.database_path), seed_archive_path
+    )
+except (OSError, sqlite3.DatabaseError, ValueError) as exc:
+    st.error(
+        "The prospect database could not be prepared or opened.",
+        icon=":material/error:",
+    )
+    st.caption(str(exc))
+    st.stop()
+
 prospects = pd.DataFrame(fetch_ranked_prospects(connection))
-filtered = filter_prospects(prospects, minimum_criteria)
+if prospects.empty:
+    st.error("No prospect data is loaded.", icon=":material/error:")
+    st.write(
+        "This deployment connected to an empty database. A Git deployment only receives "
+        "tracked repository files; it does not receive the ignored local SQLite database."
+    )
+    if settings.deployment_seed_path and not settings.deployment_seed_path.is_file():
+        st.warning(
+            "The configured deployment seed is missing from this checkout. Build it with "
+            "`python -m src.cli build-deployment-seed`, commit the resulting archive, and "
+            "redeploy.",
+            icon=":material/warning:",
+        )
+    else:
+        st.caption(
+            "Check the Streamlit deployment logs and confirm the app is running from the "
+            "repository root."
+        )
+    st.stop()
+
+updated_values = (
+    pd.to_datetime(prospects["updated_at"], errors="coerce", utc=True)
+    if "updated_at" in prospects
+    else pd.Series(dtype="datetime64[ns, UTC]")
+)
+latest_update = updated_values.max() if not updated_values.empty else pd.NaT
+data_status = f"{len(prospects):,} prospects loaded"
+if not pd.isna(latest_update):
+    data_status += f" · latest record update {latest_update.date().isoformat()}"
+if loaded_from_seed:
+    data_status += " · bundled deployment snapshot"
+st.caption(data_status)
+
+filtered = filter_prospects(prospects, minimum_criteria, prospect_search)
 filtered_ids = filtered.get("organization_id", pd.Series(dtype=str)).tolist()
+
+if filtered.empty:
+    st.info(
+        "No prospects match the current search and criteria filter.",
+        icon=":material/search:",
+    )
+    st.button(
+        "Clear filters",
+        icon=":material/refresh:",
+        on_click=reset_prospect_filters,
+    )
+    st.stop()
 
 approved_rows = fetch_approved_prospects_for_export(connection)
 visible_ids = set(filtered_ids)
@@ -113,10 +195,6 @@ with st.sidebar:
         icon=":material/download:",
         width="stretch",
     )
-
-if filtered.empty:
-    st.info("No prospects meet the selected Criteria fulfilled level.")
-    st.stop()
 
 complete_addresses = filtered.apply(
     lambda row: all(
@@ -484,6 +562,13 @@ with sources_tab:
         st.warning("No provenance assertions are attached to this record.")
 
 with review_tab:
+    st.warning(
+        "Review and suppression changes are stored in the configured SQLite file. "
+        "Streamlit Community Cloud does not guarantee persistence for local files, so "
+        "configure durable external storage before treating these decisions as a system "
+        "of record.",
+        icon=":material/warning:",
+    )
     if detail["do_not_contact"]:
         st.error("This organization is suppressed and must not be contacted.")
         if st.button(
@@ -497,6 +582,7 @@ with review_tab:
                 active=False,
                 reason="Human reviewer lifted suppression",
             )
+            st.session_state.flash_message = "Suppression lifted."
             st.rerun()
     else:
         with st.form(f"suppression_form_{selected_id}"):
@@ -510,6 +596,7 @@ with review_tab:
                     active=True,
                     reason=suppression_reason,
                 )
+                st.session_state.flash_message = "Suppression added."
                 st.rerun()
             except ValueError as exc:
                 st.error(str(exc))
@@ -537,6 +624,7 @@ with review_tab:
                 notes=notes,
                 ethics_review_completed=ethics_review,
             )
+            st.session_state.flash_message = "Prospect approved after human review."
             st.rerun()
         except ValueError as exc:
             st.error(str(exc))
@@ -549,4 +637,5 @@ with review_tab:
             notes=notes,
             ethics_review_completed=ethics_review,
         )
+        st.session_state.flash_message = "Prospect rejected."
         st.rerun()

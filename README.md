@@ -57,6 +57,37 @@ Run tests:
 pytest -q
 ```
 
+## Deploy on Streamlit Community Cloud
+
+Community Cloud receives the files tracked by Git. The working database at
+`data/processed/prospects.db` is intentionally ignored, so deploying the repository without
+a seed archive creates a valid but empty database.
+
+After refreshing the local data, build the sanitized deployment snapshot:
+
+```bash
+python -m src.cli build-deployment-seed
+git add data/deployment/prospects.db.gz
+git commit -m "Refresh deployment prospect data"
+git push
+```
+
+The app expands that archive into the ignored runtime database when the database is missing
+or contains no organizations. The snapshot builder excludes quarantined research rows and
+ingestion audit records. It also refuses to build if reviews, outreach history, or
+suppressions exist, preventing operational review data from being published accidentally.
+
+To test the exact clean-deployment path locally, point the app at a new runtime file:
+
+```bash
+PROSPECT_ENGINE_DATABASE_PATH=/tmp/prospect-engine/prospects.db streamlit run app.py
+```
+
+The bundled snapshot makes the prospect dashboard available after each deployment, but
+review and suppression changes still write to local SQLite. Streamlit Community Cloud does
+not guarantee persistence for local files. Use durable external storage before relying on
+those changes as the system of record.
+
 ## Import commands
 
 Blank templates live in `data/raw/templates/`. Every imported material fact requires source metadata, including URL, publisher, title, retrieval date, source strength, source type, raw identifier, and validation status.

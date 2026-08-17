@@ -1,6 +1,7 @@
 [app]
 name = "Bridgewater Organizational Prospect Engine"
 database_path = "data/processed/prospects.db"
+deployment_seed_path = "data/deployment/prospects.db.gz"
 default_max_radius_miles = 45.0
 allowed_max_radius_miles = 60.0
 

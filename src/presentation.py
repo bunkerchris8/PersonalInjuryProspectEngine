@@ -52,12 +52,47 @@ def format_address(
     return ", ".join(parts)
 
 
-def filter_prospects(frame: pd.DataFrame, minimum_level: str) -> pd.DataFrame:
-    """Apply the dashboard's single user-facing filter."""
+def filter_prospects(
+    frame: pd.DataFrame,
+    minimum_level: str,
+    query: str = "",
+) -> pd.DataFrame:
+    """Apply the dashboard's quality threshold and plain-text search."""
     minimum_score = minimum_criteria_score(minimum_level)
     if frame.empty:
         return frame.copy()
     result = frame[frame["data_quality_score"].fillna(0) >= minimum_score].copy()
+    normalized_query = query.strip().casefold()
+    if normalized_query:
+        searchable_columns = [
+            column
+            for column in (
+                "canonical_name",
+                "organization_type",
+                "industry",
+                "union_affiliation",
+                "local_number",
+                "street",
+                "city",
+                "state",
+                "zip",
+                "public_phone",
+                "public_email",
+                "primary_contact_name",
+                "primary_contact_role",
+                "primary_contact_phone",
+                "primary_contact_email",
+            )
+            if column in result
+        ]
+        searchable_text = (
+            result[searchable_columns]
+            .fillna("")
+            .astype(str)
+            .agg(" ".join, axis=1)
+            .str.casefold()
+        )
+        result = result[searchable_text.str.contains(normalized_query, regex=False)]
     return result.sort_values(
         ["adjusted_priority", "data_quality_score", "canonical_name"],
         ascending=[False, False, True],
