@@ -1,0 +1,4 @@
+ID,establishment_name,establishment_id,company_name,street_address,city,state,zip_code,naics_code,industry_description,annual_average_employees,total_hours_worked,total_dafw_cases,total_djtr_cases,total_other_cases,year_filing_for
+1,Example Brockton Manufacturing,EST-100,Example Company,10 Industrial Way,Brockton,MA,02301,332999,Manufacturing,100,200000,2,3,5,2025
+2,Outside Scope Warehouse,EST-200,Outside Company,20 Remote Way,Boston,MA,02108,493110,Warehousing,80,160000,1,1,1,2025
+

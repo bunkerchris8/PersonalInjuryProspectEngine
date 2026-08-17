@@ -1,0 +1,60 @@
+[app]
+name = "Bridgewater Organizational Prospect Engine"
+database_path = "data/processed/prospects.db"
+default_max_radius_miles = 45.0
+allowed_max_radius_miles = 60.0
+
+[geography]
+center_name = "Bridgewater, Massachusetts"
+center_latitude = 41.9904
+center_longitude = -70.9750
+# Until a routing provider is configured, geographic tiers use this disclosed estimate.
+estimated_driving_distance_factor = 1.18
+tier_a_max_miles = 15.0
+tier_b_max_miles = 30.0
+tier_c_max_miles = 45.0
+tier_d_max_miles = 60.0
+priority_cities = [
+  "Bridgewater",
+  "West Bridgewater",
+  "East Bridgewater",
+  "Brockton",
+  "Taunton",
+  "Plymouth",
+  "Quincy",
+  "New Bedford",
+  "Fall River",
+  "Raynham",
+  "Middleborough",
+  "Easton",
+  "South Easton",
+  "Stoughton",
+  "Abington",
+  "Whitman",
+  "Rockland",
+  "Hanson",
+  "Halifax",
+  "Kingston",
+  "Lakeville",
+  "Wareham",
+  "Mansfield",
+  "Foxborough",
+  "Norwood",
+  "Braintree",
+  "Weymouth"
+]
+
+[scoring]
+version = "mvp-1"
+minimum_scoring_source_strength = 3
+
+[official_sources]
+massachusetts_rule_7_3_url = "https://www.mass.gov/supreme-judicial-court-rules/rules-of-professional-conduct-rule-73-solicitation-of-clients"
+olms_disclosure_url = "https://olmsapps.dol.gov/olpdr/"
+osha_ita_page_url = "https://www.osha.gov/itadata"
+osha_summary_url = "https://www.osha.gov/sites/default/files/ITA_300A_Summary_Data_2025_through_03-15-2026_v2.csv"
+census_acs_year = 2024
+census_acs_base_url = "https://api.census.gov/data/2024/acs/acs5"
+census_geocoder_url = "https://geocoding.geo.census.gov/geocoder/locations/address"
+usaspending_api_url = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
+usaspending_lookback_years = 3
