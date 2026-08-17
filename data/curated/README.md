@@ -13,9 +13,14 @@ organizations, including verified facility variants and store locations. The thi
 and current trade-verification sources. The fourth pass adds 111 exact-match enrichments plus
 one newly verified Fall River manufacturer, drawing primarily from current official contact and
 location pages and current government registries. Official organization pages are assigned source
-strength 4 and official government records are assigned source strength 5. Older official
-documents retain their publication dates so the application's freshness checks can flag them
-appropriately.
+strength 4 and official government records are assigned source strength 5. The fifth pass adds
+48 more exact-match prospects: 45 from current first-party contact or facility pages, two from
+current FMCSA company snapshots, and one from a current regional chamber directory that remains
+marked as needing corroboration. The sixth pass adds 50 more exact-match prospects from current
+official organization and facility pages, two current Massachusetts government facility records,
+and one current trade-association facility listing that remains marked as needing corroboration.
+Older official documents retain their publication dates so the application's freshness checks can
+flag them appropriately.
 
 To reproduce the database update from a database that already contains the base prospect
 imports:
@@ -37,6 +42,14 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-17_round4.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-17_round4.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-17_round5.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-17_round5.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-17_round6.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-17_round6.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
