@@ -72,10 +72,14 @@ git commit -m "Refresh deployment prospect data"
 git push
 ```
 
-The app expands that archive into the ignored runtime database when the database is missing
-or contains no organizations. The snapshot builder excludes quarantined research rows and
-ingestion audit records. It also refuses to build if reviews, outreach history, or
-suppressions exist, preventing operational review data from being published accidentally.
+The app fingerprints that archive and expands it into the ignored runtime database when the
+database is missing or the committed snapshot changes. This makes data-only Git pushes
+visible without manually deleting the old runtime database. Any in-session human review,
+outreach, and suppression records are carried forward when the snapshot refreshes. A local
+working database with ingestion history is never replaced. The snapshot builder excludes
+quarantined research rows and ingestion audit records. It also refuses to build if reviews,
+outreach history, or suppressions exist, preventing operational review data from being
+published accidentally.
 
 To test the exact clean-deployment path locally, point the app at a new runtime file:
 

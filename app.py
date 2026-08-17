@@ -7,7 +7,11 @@ import streamlit as st
 
 from src.config import load_settings
 from src.database import connect_database, initialize_schema
-from src.database.deployment import materialize_deployment_seed
+from src.database.deployment import (
+    deployment_seed_fingerprint,
+    deployment_seed_is_current,
+    materialize_deployment_seed,
+)
 from src.database.repository import (
     DEFAULT_EXPORT_FIELDS,
     EXPORT_FIELD_LABELS,
@@ -41,9 +45,17 @@ st.set_page_config(
 )
 
 
-@st.cache_resource
-def database_connection(database_path: str, seed_archive_path: str | None):
-    loaded_from_seed = materialize_deployment_seed(database_path, seed_archive_path)
+@st.cache_resource(max_entries=1)
+def database_connection(
+    database_path: str,
+    seed_archive_path: str | None,
+    seed_fingerprint: str | None,
+):
+    loaded_from_seed = materialize_deployment_seed(
+        database_path,
+        seed_archive_path,
+        seed_fingerprint=seed_fingerprint,
+    )
     connection = connect_database(database_path)
     initialize_schema(connection)
     return connection, loaded_from_seed
@@ -91,9 +103,10 @@ with st.sidebar:
 seed_archive_path = (
     str(settings.deployment_seed_path) if settings.deployment_seed_path else None
 )
+seed_fingerprint = deployment_seed_fingerprint(seed_archive_path)
 try:
     connection, loaded_from_seed = database_connection(
-        str(settings.database_path), seed_archive_path
+        str(settings.database_path), seed_archive_path, seed_fingerprint
     )
 except (OSError, sqlite3.DatabaseError, ValueError) as exc:
     st.error(
@@ -133,8 +146,10 @@ latest_update = updated_values.max() if not updated_values.empty else pd.NaT
 data_status = f"{len(prospects):,} prospects loaded"
 if not pd.isna(latest_update):
     data_status += f" · latest record update {latest_update.date().isoformat()}"
-if loaded_from_seed:
-    data_status += " · bundled deployment snapshot"
+if deployment_seed_is_current(settings.database_path, seed_fingerprint):
+    data_status += f" · bundled snapshot {seed_fingerprint[:8]}"
+    if loaded_from_seed:
+        data_status += " refreshed"
 st.caption(data_status)
 
 filtered = filter_prospects(prospects, minimum_criteria, prospect_search)
