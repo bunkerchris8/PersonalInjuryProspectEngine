@@ -56,6 +56,17 @@ strictly organization-level: no member lists, student records, individual demogr
 or inferred traits are collected. All 42 prospects have a current official, government, or
 official umbrella source and at least one public organizational or role-based contact channel.
 
+The eleventh pass fills worker-center, immigrant/refugee-service, disability-employment, and
+veteran-service gaps. It adds four worker centers, three labor or worker-advocacy organizations,
+three construction pre-apprenticeship programs, eight immigrant-serving community nonprofits,
+four refugee-serving community nonprofits, 12 disability-employment or independent-living
+organizations, and five veteran-serving nonprofits. The disability-service set adds especially
+useful South Shore coverage near Hanover and Pembroke, while the worker and immigrant-service
+sets deepen Boston, Brockton, New Bedford, Quincy, Taunton, and nearby Rhode Island coverage.
+All 39 prospects have a current public organizational or role-based contact channel. Categories
+describe organizations and their published programs only; the files contain no client, member,
+student, veteran, disability, immigration-status, or other individual demographic records.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -104,6 +115,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-17_round10.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-17_round10.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round11.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round11.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
