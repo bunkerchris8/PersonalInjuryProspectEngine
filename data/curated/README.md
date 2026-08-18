@@ -105,6 +105,18 @@ gender, and economic-status descriptions apply only to published organization mi
 programs; no client, congregant, member, household, health, or other individual-level attributes
 are collected or inferred.
 
+The fifteenth pass adds 40 distinct organizations in five deliberately even coverage groups:
+eight housing-stability or homelessness-response organizations; eight mental-health, suicide-
+prevention, or peer-recovery organizations; eight youth-development, education, mentoring, or
+family-support organizations; eight culturally specific immigrant, refugee, or newcomer-serving
+organizations; and eight labor organizations covering transportation, grocery, auto and higher
+education, public education, performing arts, broadcast and media, stagecraft, and postal work.
+The local footprint includes Kingston, East Bridgewater, Marshfield, Hingham, Plymouth,
+Brockton, Taunton, Fall River, New Bedford, and Westport, alongside regional organizations that
+serve the configured geography. Public role-based channels are provided for every prospect; no
+member, student, client, survivor, housing-status, mental-health, ethnicity, language, or union-
+membership data about individuals is collected or inferred.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -169,6 +181,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round14.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round14.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round15.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round15.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
