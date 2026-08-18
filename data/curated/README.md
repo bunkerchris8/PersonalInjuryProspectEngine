@@ -130,6 +130,18 @@ Mission labels describe organizations only; no age, diagnosis, disability, veter
 religion, ethnicity, language, union membership, client status, or other individual attribute
 is collected or inferred.
 
+The seventeenth pass adds 40 distinct organizations across five underrepresented coverage
+groups: eight Indigenous community, tribal-government, language, or cultural institutions;
+eight agriculture, urban-farming, conservation, or regional food-system organizations; eight
+commercial-fishing, maritime-trade, ocean-economy, port, or boating organizations; eight
+women's economic-support, gender-equity, community-service, or pro bono legal organizations;
+and eight labor organizations covering healthcare, telecommunications, public education,
+engineering and science, corrections, and university employees. All contacts are generic
+organizational channels or public office roles. Demographic and community labels describe
+published organization missions only; no member, client, student, tribal-enrollment, gender,
+race, economic-status, occupation, or union-membership data about individuals is collected or
+inferred.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -202,6 +214,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round16.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round16.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round17.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round17.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
