@@ -117,6 +117,19 @@ serve the configured geography. Public role-based channels are provided for ever
 member, student, client, survivor, housing-status, mental-health, ethnicity, language, or union-
 membership data about individuals is collected or inferred.
 
+The sixteenth pass adds 40 distinct organizations in five further coverage groups: eight aging
+or dementia-support organizations; eight veteran-service organizations and public counseling
+centers; eight disability-rights, independent-living, autism, Down syndrome, or brain-injury
+organizations; eight faith-rooted, cultural, civil-rights, or multilingual community
+organizations; and eight labor organizations spanning postal, transit, public service,
+education, health-professional, office, firefighting, and state-federation work. The pass adds
+local offices in Brockton, Taunton, Fairhaven, New Bedford, Quincy, Braintree, and Cape Cod as
+well as regional Massachusetts and Rhode Island organizations that serve the configured area.
+Every contact is a generic organizational channel or an explicitly identified public office.
+Mission labels describe organizations only; no age, diagnosis, disability, veteran status,
+religion, ethnicity, language, union membership, client status, or other individual attribute
+is collected or inferred.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -185,6 +198,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round15.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round15.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round16.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round16.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
