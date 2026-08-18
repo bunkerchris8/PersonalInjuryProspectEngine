@@ -47,6 +47,15 @@ traits, personal contact details, or inferred demographic attributes are collect
 official page published a person-shaped email address without enough context to verify a public
 professional role, the pass retained only the organization's public main line.
 
+The tenth pass addresses business-network, trade-pipeline, and vocational-training gaps. It adds
+19 local and regional business associations, three trade associations, ten vocational or
+agricultural technical schools, and ten worker-serving economic-development, planning, fishing,
+and civic organizations. The business networks include organizations centered in Hanover,
+Pembroke, women in business, and Hispanic and minority-owned businesses, but the records remain
+strictly organization-level: no member lists, student records, individual demographic attributes,
+or inferred traits are collected. All 42 prospects have a current official, government, or
+official umbrella source and at least one public organizational or role-based contact channel.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -91,6 +100,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-17_round9.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-17_round9.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-17_round10.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-17_round10.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
