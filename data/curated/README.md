@@ -156,6 +156,25 @@ patient, caregiver, diagnosis, disability, foster-care, adoption, survivor, race
 immigration, student, occupation, union-membership, or other individual-level attribute is
 collected or inferred.
 
+The nineteenth pass adds 40 distinct organizations across maternal and infant support,
+sensory-access and condition-specific disability services, cultural community organizations,
+and labor groups. Every contact is a generic organization channel, public program office, or
+role-based union office. Mission and community labels apply only to organizations; the pass
+does not collect or infer pregnancy, parental status, disability, diagnosis, race, ethnicity,
+language, occupation, union membership, or any other individual attribute.
+
+The twentieth pass adds 40 more distinct organizations in five balanced coverage groups:
+eight disability or neurodiversity service and advocacy organizations; eight fatherhood,
+single-parent, foster, kinship, grandfamily, sibling, or special-health-needs family programs;
+eight Eritrean, Tigrayan, Ethiopian, Hmong, Belarusian, Albanian, Turkish, or Indonesian
+community organizations; eight Black, Hispanic, Asian American, South Asian, LGBTQ, minority
+law-enforcement, nursing, physician, or legal professional associations; and eight veteran,
+disabled-veteran, Gold Star, or military-family organizations. All contacts are generic
+organizational channels or public office roles. These categories describe published
+organizational missions only; no member, client, caregiver, diagnosis, disability, veteran
+status, race, ethnicity, sexual orientation, profession, or other individual attribute is
+collected or inferred.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -236,6 +255,14 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round18.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round18.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round19.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round19.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round20.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round20.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
