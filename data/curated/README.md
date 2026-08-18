@@ -38,6 +38,15 @@ registries, FMCSA snapshots, and official organization pages provide the asserte
 and college reach is recorded only when a current enrollment source documents it, and ambiguous
 local business labels remain unenriched unless an exact facility match is available.
 
+The ninth pass fills three major organization-type gaps. It adds 36 labor councils, statewide
+labor organizations, and union locals; nine MassHire career centers and workforce boards; and
+12 public libraries across the Bridgewater, South Shore, Bristol County, Greater New Bedford,
+and nearby Rhode Island service area. All 57 organizations have a current official or government
+source and a public organizational or role-based contact channel. No member lists, protected
+traits, personal contact details, or inferred demographic attributes are collected. When an
+official page published a person-shaped email address without enough context to verify a public
+professional role, the pass retained only the organization's public main line.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -78,6 +87,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-17_round8.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-17_round8.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-17_round9.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-17_round9.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
