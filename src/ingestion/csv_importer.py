@@ -129,6 +129,12 @@ def _find_match(
         LEFT JOIN organization_aliases a ON a.organization_id = o.organization_id
         WHERE o.normalized_name = ? OR a.normalized_alias = ?
            OR ((o.city = ? OR o.zip = ?) AND o.state = ?)
+        ORDER BY CASE
+            WHEN o.normalized_name = ? THEN 0
+            WHEN a.normalized_alias = ? THEN 1
+            ELSE 2
+        END,
+        o.canonical_name
         LIMIT 100
         """,
         (
@@ -137,6 +143,8 @@ def _find_match(
             candidate.city,
             candidate.zip_code,
             candidate.state,
+            normalized,
+            normalized,
         ),
     ).fetchall()
     best_row: sqlite3.Row | None = None

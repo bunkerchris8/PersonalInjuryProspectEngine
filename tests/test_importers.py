@@ -20,6 +20,7 @@ from src.ingestion.census_geocoder import (
 )
 from src.ingestion.csv_importer import import_contacts_csv, import_events_csv, import_organizations_csv
 from src.ingestion.osha_ita import import_osha_summary
+from src.normalization.entities import normalize_name
 from src.scoring.service import score_all_organizations
 
 
@@ -66,6 +67,68 @@ def test_sample_vertical_slice_is_idempotent(connection, settings):
           AND field_name IN ('venue_name', 'street', 'permission_required')
         """
     ).fetchone()[0] == 3
+
+
+def test_exact_organization_match_is_prioritized_in_large_city(
+    connection, settings, tmp_path
+):
+    timestamp = "2026-08-17T12:00:00+00:00"
+    connection.executemany(
+        """
+        INSERT INTO organizations(
+            organization_id, canonical_name, normalized_name,
+            organization_type, city, state, created_at, updated_at
+        ) VALUES (?, ?, ?, 'workplace', 'Taunton', 'MA', ?, ?)
+        """,
+        [
+            (
+                f"org_filler_{index:03d}",
+                f"Filler Workplace {index:03d}",
+                normalize_name(f"Filler Workplace {index:03d}"),
+                timestamp,
+                timestamp,
+            )
+            for index in range(101)
+        ],
+    )
+    connection.commit()
+
+    template = SAMPLES / "templates" / "organizations.csv"
+    headers = next(csv.reader(template.open()))
+    path = tmp_path / "large_city_exact_match.csv"
+    row = {header: "" for header in headers}
+    row.update(
+        {
+            "canonical_name": "Old Colony YMCA - Taunton Branch",
+            "organization_type": "community_organization",
+            "city": "Taunton",
+            "state": "MA",
+            "source_url": "https://example.gov/verified-organization",
+            "publisher": "Government fixture",
+            "source_title": "Verified organization fixture",
+            "retrieval_date": "2026-08-17",
+            "source_strength": "5",
+            "source_type": "public_registry",
+            "raw_source_identifier": "large-city-exact-match-fixture",
+            "extraction_method": "manual_csv",
+            "validation_status": "verified",
+        }
+    )
+    with path.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=headers)
+        writer.writeheader()
+        writer.writerow(row)
+
+    import_organizations_csv(connection, path, settings)
+    import_organizations_csv(connection, path, settings)
+
+    assert connection.execute(
+        """
+        SELECT COUNT(*) FROM organizations
+        WHERE normalized_name = ? AND city = 'Taunton'
+        """,
+        (normalize_name("Old Colony YMCA - Taunton Branch"),),
+    ).fetchone()[0] == 1
 
 
 def test_strength_one_rows_are_quarantined(connection, settings, tmp_path):

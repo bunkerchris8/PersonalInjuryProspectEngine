@@ -30,6 +30,14 @@ channels. Generic OSHA labels were linked only when an official page showed the 
 facility address; unresolved records remain available as prospects without speculative contact
 details.
 
+The eighth pass broadens the Bridgewater-centered service area while deepening Hanover and
+Pembroke coverage. It adds 29 verified municipal, education, nonprofit, public-safety, and
+workplace prospects; enriches 34 existing employers and facilities; and supplies 61 public,
+role-based contact channels. Current municipal directories, Massachusetts facility and school
+registries, FMCSA snapshots, and official organization pages provide the asserted fields. School
+and college reach is recorded only when a current enrollment source documents it, and ambiguous
+local business labels remain unenriched unless an exact facility match is available.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -66,6 +74,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-17_round7.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-17_round7.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-17_round8.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-17_round8.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
