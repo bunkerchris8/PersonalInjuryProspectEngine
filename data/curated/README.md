@@ -92,6 +92,19 @@ documents each location. Exact matches already enriched in earlier passes were o
 the other curated files, organization mission labels are aggregate and no member, client,
 survivor, age, language, ethnicity, or union-membership data about individuals is collected.
 
+The fourteenth pass adds 40 distinct organizations across five further gaps: ten community-action
+and anti-poverty agencies; eight food-security, emergency-assistance, or regional community
+partnership organizations; eight recovery, harm-reduction, or substance-use-prevention
+organizations; nine faith-rooted or culturally responsive community-service organizations; and
+five environmental-justice or public-health advocacy organizations. Local food-access coverage is
+extended directly in Hanover and Pembroke, while the broader set remains within the configured
+service area. The accompanying role file has one public organizational channel for every new
+prospect and also closes the sole remaining contact gap among the existing non-workplace records
+with the official office line for Laborers Local 876. Recovery, religion, language, ethnicity,
+gender, and economic-status descriptions apply only to published organization missions and
+programs; no client, congregant, member, household, health, or other individual-level attributes
+are collected or inferred.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -152,6 +165,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round13.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round13.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round14.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round14.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
