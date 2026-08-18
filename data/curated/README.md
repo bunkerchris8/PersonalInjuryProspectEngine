@@ -263,6 +263,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round20.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round20.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round21.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round21.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
