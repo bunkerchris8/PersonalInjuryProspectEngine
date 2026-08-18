@@ -67,6 +67,19 @@ All 39 prospects have a current public organizational or role-based contact chan
 describe organizations and their published programs only; the files contain no client, member,
 student, veteran, disability, immigration-status, or other individual demographic records.
 
+The twelfth pass adds 42 organizations across gaps not covered by the earlier workplace-heavy
+imports: seven inclusive business-development networks, one women's economic-justice fund,
+three culturally focused community-development organizations, one civil-rights branch, one
+domestic-worker coalition, 11 LGBTQ community organizations, four Indigenous community or
+tribal organizations, ten reentry or barrier-to-employment programs, and four organizations
+serving blind, visually impaired, Deaf, or disabled people. The pass includes local additions in
+Brockton, East Bridgewater, Kingston, Plymouth, Quincy, and New Bedford along with regional
+organizations in Boston and Rhode Island. All 42 have an official or government source and a
+generic organizational channel or an explicitly identified public office. Demographic labels
+describe only the organizations' published missions; no member, client, participant, tribal
+enrollment, justice-history, disability, sexual-orientation, or other individual attributes are
+collected or inferred.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -119,6 +132,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round11.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round11.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round12.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round12.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
