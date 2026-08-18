@@ -80,6 +80,18 @@ describe only the organizations' published missions; no member, client, particip
 enrollment, justice-history, disability, sexual-orientation, or other individual attributes are
 collected or inferred.
 
+The thirteenth pass adds 40 more organizations spanning six remaining coverage gaps: ten
+culturally responsive or multilingual community and workforce organizations; six cooperative-
+economy, community-ownership, or resident-led wealth-building organizations; two local housing
+offices and two civil legal-aid offices; seven survivor-service or violence-prevention
+organizations; five aging, older-worker, or multilingual workforce organizations; and eight
+labor organizations covering public service, hospitality, transit, firefighting, property
+services, carpentry, human services, education, and motion-picture crafts. The housing and legal
+records include separate Brockton, Kingston, and Fall River public offices only where the source
+documents each location. Exact matches already enriched in earlier passes were omitted. As in
+the other curated files, organization mission labels are aggregate and no member, client,
+survivor, age, language, ethnicity, or union-membership data about individuals is collected.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -136,6 +148,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round12.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round12.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round13.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round13.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
