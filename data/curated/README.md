@@ -22,6 +22,14 @@ and one current trade-association facility listing that remains marked as needin
 Older official documents retain their publication dates so the application's freshness checks can
 flag them appropriately.
 
+The seventh pass expands local coverage to Hanover and Pembroke. It imports 41 workplaces
+from OSHA's 2025 ITA summary (17 in Hanover and 24 in Pembroke), adds five current community
+organizations from their official pages, and supplies verified organizational contact details
+for 34 of the OSHA workplaces. The accompanying role file contains 38 public, role-based
+channels. Generic OSHA labels were linked only when an official page showed the same local
+facility address; unresolved records remain available as prospects without speculative contact
+details.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -50,6 +58,14 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-17_round6.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-17_round6.csv
+python -m src.cli import-osha \
+  --url https://www.osha.gov/sites/default/files/ITA_300A_Summary_Data_2025_through_03-15-2026_v2.csv \
+  --city Hanover \
+  --city Pembroke
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-17_round7.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-17_round7.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```

@@ -300,6 +300,44 @@ def _assert_and_update_organization(
             conflict_group=conflict_group,
         )
 
+    # Distance fields are deterministic derivatives of verified coordinates rather
+    # than independently sourced facts. Keep the organization row in sync when a
+    # later enrichment adds coordinates to an existing record. Only apply the
+    # derivatives when both incoming coordinates survived conflict handling.
+    if {"latitude", "longitude"}.issubset(asserted_fields):
+        latitude = values.get("latitude")
+        longitude = values.get("longitude")
+        refreshed = connection.execute(
+            "SELECT latitude, longitude FROM organizations WHERE organization_id = ?",
+            (organization_id,),
+        ).fetchone()
+        coordinates_accepted = (
+            latitude is not None
+            and longitude is not None
+            and refreshed is not None
+            and refreshed["latitude"] is not None
+            and refreshed["longitude"] is not None
+            and float(refreshed["latitude"]) == float(latitude)
+            and float(refreshed["longitude"]) == float(longitude)
+        )
+        if coordinates_accepted:
+            connection.execute(
+                """
+                UPDATE organizations
+                SET straight_line_distance = ?, estimated_driving_distance = ?,
+                    distance_method = ?, geographic_tier = ?, updated_at = ?
+                WHERE organization_id = ?
+                """,
+                (
+                    values["straight_line_distance"],
+                    values["estimated_driving_distance"],
+                    values["distance_method"],
+                    values["geographic_tier"],
+                    utc_now(),
+                    organization_id,
+                ),
+            )
+
 
 def _upsert_primary_location(
     connection: sqlite3.Connection, organization_id: str, values: dict[str, object]

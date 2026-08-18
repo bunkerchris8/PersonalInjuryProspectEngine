@@ -96,6 +96,60 @@ def test_strength_one_rows_are_quarantined(connection, settings, tmp_path):
     assert connection.execute("SELECT COUNT(*) FROM research_queue").fetchone()[0] == 1
 
 
+def test_coordinate_enrichment_updates_derived_distance(
+    connection, settings, tmp_path
+):
+    import_organizations_csv(connection, SAMPLES / "sample_organizations.csv", settings)
+    template = SAMPLES / "templates" / "organizations.csv"
+    headers = next(csv.reader(template.open()))
+    path = tmp_path / "coordinate_enrichment.csv"
+    row = {header: "" for header in headers}
+    row.update(
+        {
+            "canonical_name": "IBEW Local 223",
+            "organization_type": "union_local",
+            "city": "Taunton",
+            "state": "MA",
+            "latitude": "41.956761589881",
+            "longitude": "-71.134291473971",
+            "asserted_fields": "latitude;longitude",
+            "source_url": "https://example.gov/verified-location",
+            "publisher": "Government location fixture",
+            "source_title": "Verified coordinates",
+            "retrieval_date": "2026-08-17",
+            "source_strength": "5",
+            "source_type": "public_registry",
+            "raw_source_identifier": "verified-location-fixture",
+            "extraction_method": "manual_csv",
+            "validation_status": "verified",
+        }
+    )
+    with path.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=headers)
+        writer.writeheader()
+        writer.writerow(row)
+
+    stats = import_organizations_csv(connection, path, settings)
+    organization = connection.execute(
+        "SELECT * FROM organizations WHERE canonical_name = 'IBEW Local 223'"
+    ).fetchone()
+    location = connection.execute(
+        "SELECT * FROM locations WHERE organization_id = ? AND is_primary = 1",
+        (organization["organization_id"],),
+    ).fetchone()
+
+    assert stats.rows_imported == 1
+    assert organization["latitude"] == pytest.approx(41.956761589881)
+    assert organization["longitude"] == pytest.approx(-71.134291473971)
+    assert organization["straight_line_distance"] is not None
+    assert organization["estimated_driving_distance"] is not None
+    assert organization["distance_method"] == "haversine_times_configured_road_factor"
+    assert organization["geographic_tier"] == "A"
+    assert location["estimated_driving_distance"] == pytest.approx(
+        organization["estimated_driving_distance"]
+    )
+
+
 def test_approval_and_suppression_are_enforced(connection, settings):
     import_organizations_csv(connection, SAMPLES / "sample_organizations.csv", settings)
     organization_id = connection.execute(
