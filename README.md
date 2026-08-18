@@ -103,6 +103,20 @@ python -m src.cli import-events data/raw/templates/events.csv
 python -m src.cli score
 ```
 
+The current gap-enrichment bundle adds verified organization-level records for maternal
+and infant support, sensory-access services, condition-specific advocacy, cultural
+community organizations, and labor groups. It contains only public organizational and
+role-based contact channels; it does not identify or characterize individual members,
+patients, students, or clients.
+
+```bash
+python -m src.cli import-organizations data/curated/verified_organization_contacts_2026-08-18_round19.csv
+python -m src.cli import-contacts data/curated/verified_role_contacts_2026-08-18_round19.csv
+python -m src.cli geocode --batch --limit 10000
+python -m src.cli score
+python -m src.cli build-deployment-seed
+```
+
 For a manually downloaded OSHA 300A summary CSV:
 
 ```bash

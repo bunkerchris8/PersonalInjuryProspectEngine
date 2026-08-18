@@ -118,6 +118,8 @@ def match_organizations(
         return MatchResult(0.94, "exact name plus professional contact and locality", True)
     if same_name and (same_city or same_zip):
         return MatchResult(0.88, "exact name and locality", True)
+    if same_name and (same_domain or same_phone):
+        return MatchResult(0.91, "exact name plus matching professional contact", True)
 
     name_score = fuzz.token_set_ratio(incoming_name, existing_name)
     address_score = fuzz.ratio(incoming_address, existing_address) if incoming_address and existing_address else 0
@@ -130,4 +132,3 @@ def match_organizations(
     if name_score >= 80:
         return MatchResult(0.55, "similar name without enough corroboration", False)
     return MatchResult(0.25, "insufficient identity evidence", False)
-

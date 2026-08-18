@@ -36,10 +36,25 @@ def test_similar_name_alone_does_not_merge():
     assert result.confidence < 0.80
 
 
+def test_exact_name_and_domain_can_merge_without_a_street_address():
+    incoming = OrganizationCandidate(
+        name="Statewide Community Network",
+        website="https://community.example.org/programs",
+        state="MA",
+    )
+    existing = OrganizationCandidate(
+        name="Statewide Community Network",
+        website="https://community.example.org/",
+        state="MA",
+    )
+    result = match_organizations(incoming, existing)
+    assert result.auto_merge is True
+    assert result.confidence >= 0.90
+
+
 def test_geographic_tiers_use_estimated_driving_distance(settings):
     result = calculate_distance(41.956761589881, -71.134291473971, settings)
     assert result.straight_line_miles > 0
     assert result.estimated_driving_miles > result.straight_line_miles
     assert result.geographic_tier == "A"
     assert result.within_configured_radius is True
-
