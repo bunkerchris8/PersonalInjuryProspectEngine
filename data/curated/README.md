@@ -142,6 +142,20 @@ published organization missions only; no member, client, student, tribal-enrollm
 race, economic-status, occupation, or union-membership data about individuals is collected or
 inferred.
 
+The eighteenth pass adds 40 distinct organizations in five intentionally balanced groups:
+eight patient, caregiver, disease-resource, or health-navigation organizations; eight parent,
+child, foster-youth, adoption, or family-support organizations; eight Black, Caribbean, Latino,
+Asian American, immigrant, or culturally responsive community organizations; eight public
+workers' compensation, occupational-health, rehabilitation, workplace-safety, or labor-
+education programs; and eight labor organizations representing nurses and allied health
+professionals, correctional officers, police and public-safety dispatchers, newsroom workers,
+clerical and technical staff, professional musicians, and graduate researchers and teachers.
+Every contact is a generic organization channel, public program office, or role-based union
+office. The records describe organizations and their published service missions only; no
+patient, caregiver, diagnosis, disability, foster-care, adoption, survivor, race, ethnicity,
+immigration, student, occupation, union-membership, or other individual-level attribute is
+collected or inferred.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -218,6 +232,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round17.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round17.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round18.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round18.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
