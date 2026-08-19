@@ -104,15 +104,15 @@ python -m src.cli score
 ```
 
 The current gap-enrichment bundle adds 40 verified organization-level records spanning
-newcomer and national-origin cultural communities, Buddhist cultural centers, women and
-Asian-American professional networks, language-access and interpreter workforce organizations,
-and additional South Shore firefighter unions. It contains only public organizational and
-role-based contact channels; it does not identify or characterize individual members, patients,
-students, clients, workers, or community participants.
+municipal and state veteran services, municipal disability commissions, county and regional
+agriculture networks, tradeswomen organizations, women-in-construction chapters, and state or
+regional building-trades councils. It contains only public organizational and role-based
+contact channels; it does not identify or characterize individual veterans, people with
+disabilities, farmers, students, union members, workers, or community participants.
 
 ```bash
-python -m src.cli import-organizations data/curated/verified_organization_contacts_2026-08-18_round23.csv
-python -m src.cli import-contacts data/curated/verified_role_contacts_2026-08-18_round23.csv
+python -m src.cli import-organizations data/curated/verified_organization_contacts_2026-08-18_round24.csv
+python -m src.cli import-contacts data/curated/verified_role_contacts_2026-08-18_round24.csv
 python -m src.cli geocode --batch --limit 10000
 python -m src.cli score
 python -m src.cli build-deployment-seed

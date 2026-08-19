@@ -175,6 +175,18 @@ organizational missions only; no member, client, caregiver, diagnosis, disabilit
 status, race, ethnicity, sexual orientation, profession, or other individual attribute is
 collected or inferred.
 
+The twenty-fourth pass fills four organization-level gaps left by the earlier rounds. It adds
+11 municipal or state veteran-service and oversight offices; nine municipal disability
+commissions; ten county, state, regional, organic, land-access, and farmer-training
+organizations; and ten tradeswomen, women-in-construction, and building-trades organizations.
+The local set includes Bridgewater, Hanover, Pembroke, Brockton, Plymouth, Quincy, Weymouth,
+Braintree, Taunton, Fall River, and New Bedford, with regional Massachusetts and Rhode Island
+organizations that serve the configured geography. County Farm Bureau records use the state
+federation's generic public office rather than publishing individual chapter officers. All
+demographic and occupational descriptions apply only to organizations and programs; no member,
+client, veteran, disability, gender, race, occupation, or union-membership attribute about any
+individual is collected or inferred.
+
 To reproduce the database update from a database that already contains the base prospect
 imports:
 
@@ -275,6 +287,10 @@ python -m src.cli import-organizations \
   data/curated/verified_organization_contacts_2026-08-18_round23.csv
 python -m src.cli import-contacts \
   data/curated/verified_role_contacts_2026-08-18_round23.csv
+python -m src.cli import-organizations \
+  data/curated/verified_organization_contacts_2026-08-18_round24.csv
+python -m src.cli import-contacts \
+  data/curated/verified_role_contacts_2026-08-18_round24.csv
 python -m src.cli score
 python -m src.cli build-deployment-seed
 ```
