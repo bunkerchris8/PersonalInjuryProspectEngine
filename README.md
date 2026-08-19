@@ -103,16 +103,16 @@ python -m src.cli import-events data/raw/templates/events.csv
 python -m src.cli score
 ```
 
-The current gap-enrichment bundle adds 42 verified organization-level records spanning
-housing access and homelessness services, underrepresented cultural communities, diverse
-professional affinity associations, care and public-health workforce networks, and overlooked
-labor organizations, including current Hanover and Pembroke firefighter locals. It contains
-only public organizational and role-based contact channels; it does not identify or characterize
-individual members, patients, students, clients, workers, or community participants.
+The current gap-enrichment bundle adds 40 verified organization-level records spanning
+national-origin cultural communities, interfaith and faith networks, diverse professional
+affinity associations, specialized nursing and health-workforce groups, and overlooked South
+Shore labor organizations in Hanover, Pembroke, Hanson, and Rockland. It contains only public
+organizational and role-based contact channels; it does not identify or characterize individual
+members, patients, students, clients, workers, or community participants.
 
 ```bash
-python -m src.cli import-organizations data/curated/verified_organization_contacts_2026-08-18_round21.csv
-python -m src.cli import-contacts data/curated/verified_role_contacts_2026-08-18_round21.csv
+python -m src.cli import-organizations data/curated/verified_organization_contacts_2026-08-18_round22.csv
+python -m src.cli import-contacts data/curated/verified_role_contacts_2026-08-18_round22.csv
 python -m src.cli geocode --batch --limit 10000
 python -m src.cli score
 python -m src.cli build-deployment-seed
