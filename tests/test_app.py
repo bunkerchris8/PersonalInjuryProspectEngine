@@ -78,6 +78,9 @@ def test_streamlit_app_features_and_interactions(
         "Sources",
         "Human review",
     ]
+    markdown_labels = [item.value for item in app.markdown]
+    assert "**By Criteria fulfilled**" in markdown_labels
+    assert "**By prospect type**" not in markdown_labels
 
     prospect_table = app.dataframe[0].value
     assert len(prospect_table) == 3

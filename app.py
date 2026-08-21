@@ -30,7 +30,6 @@ from src.presentation import (
     criteria_fulfilled_label,
     filter_prospects,
     format_address,
-    prospect_type_breakdown,
 )
 
 
@@ -254,23 +253,13 @@ st.caption(
     f"These summaries include all {len(filtered):,} prospects currently shown—not only "
     "the prospect selected below."
 )
-breakdown_columns = st.columns(2)
-with breakdown_columns[0]:
-    st.markdown("**By Criteria fulfilled**")
-    st.bar_chart(
-        criteria_breakdown(filtered),
-        x="Criteria fulfilled",
-        y="Prospects",
-        height=260,
-    )
-with breakdown_columns[1]:
-    st.markdown("**By prospect type**")
-    st.bar_chart(
-        prospect_type_breakdown(filtered),
-        x="Prospect type",
-        y="Prospects",
-        height=260,
-    )
+st.markdown("**By Criteria fulfilled**")
+st.bar_chart(
+    criteria_breakdown(filtered),
+    x="Criteria fulfilled",
+    y="Prospects",
+    height=260,
+)
 
 st.subheader("Prospects")
 st.caption(

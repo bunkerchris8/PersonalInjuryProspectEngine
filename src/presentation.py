@@ -115,21 +115,6 @@ def criteria_breakdown(frame: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def prospect_type_breakdown(frame: pd.DataFrame) -> pd.DataFrame:
-    if frame.empty:
-        return pd.DataFrame(columns=["Prospect type", "Prospects"])
-    labels = (
-        frame["organization_type"]
-        .fillna("Unknown")
-        .astype(str)
-        .str.replace("_", " ", regex=False)
-        .str.strip()
-        .str.title()
-    )
-    counts = labels.value_counts()
-    return counts.rename_axis("Prospect type").reset_index(name="Prospects")
-
-
 def build_prospect_table(frame: pd.DataFrame) -> pd.DataFrame:
     columns = [
         "Organization",
