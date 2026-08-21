@@ -4,12 +4,15 @@ import pandas as pd
 import pytest
 
 from src.presentation import (
+    ALL_ORGANIZATION_TYPES,
     CRITERIA_LEVELS,
+    ORGANIZATION_TYPE_OPTIONS,
     build_prospect_table,
     criteria_breakdown,
     criteria_fulfilled_label,
     filter_prospects,
     format_address,
+    organization_type_category,
 )
 
 
@@ -81,6 +84,52 @@ def test_prospect_search_matches_names_locations_and_contacts():
     assert filter_prospects(frame, "Not much", "02360")["canonical_name"].tolist() == [
         "Plymouth Electric"
     ]
+
+
+@pytest.mark.parametrize(
+    ("organization_type", "expected"),
+    [
+        ("workplace", "Workplaces"),
+        ("firefighter_union", "Unions and labor"),
+        ("community_organization", "Community and nonprofit organizations"),
+        ("nursing_professional_association", "Associations and professional groups"),
+        ("municipal_disability_commission", "Public agencies and other organizations"),
+    ],
+)
+def test_organization_types_are_grouped_for_dashboard_filtering(
+    organization_type, expected
+):
+    assert organization_type_category(organization_type) == expected
+
+
+def test_organization_type_filter_combines_with_search_and_criteria():
+    frame = pd.DataFrame(
+        [
+            {
+                "canonical_name": "Bridgewater Builders",
+                "organization_type": "workplace",
+                "city": "Bridgewater",
+                "data_quality_score": 0.8,
+                "adjusted_priority": 50,
+            },
+            {
+                "canonical_name": "Bridgewater Labor Council",
+                "organization_type": "labor_organization",
+                "city": "Bridgewater",
+                "data_quality_score": 0.9,
+                "adjusted_priority": 60,
+            },
+        ]
+    )
+
+    assert ORGANIZATION_TYPE_OPTIONS[0] == ALL_ORGANIZATION_TYPES
+    filtered = filter_prospects(
+        frame,
+        "Some",
+        "Bridgewater",
+        "Unions and labor",
+    )
+    assert filtered["canonical_name"].tolist() == ["Bridgewater Labor Council"]
 
 
 def test_breakdown_always_includes_the_full_scale():

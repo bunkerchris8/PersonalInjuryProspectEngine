@@ -24,7 +24,9 @@ from src.database.repository import (
     set_organization_suppression,
 )
 from src.presentation import (
+    ALL_ORGANIZATION_TYPES,
     CRITERIA_LEVELS,
+    ORGANIZATION_TYPE_OPTIONS,
     build_prospect_table,
     criteria_breakdown,
     criteria_fulfilled_label,
@@ -75,6 +77,7 @@ def database_connection(
 
 def reset_prospect_filters() -> None:
     st.session_state.minimum_criteria = "Not much"
+    st.session_state.organization_type_filter = ALL_ORGANIZATION_TYPES
     st.session_state.prospect_search = ""
 
 
@@ -99,6 +102,12 @@ with st.sidebar:
         key="prospect_search",
         placeholder="Name, city, ZIP, or contact",
         icon=":material/search:",
+    )
+    organization_type_filter = st.selectbox(
+        "Organization type",
+        options=ORGANIZATION_TYPE_OPTIONS,
+        key="organization_type_filter",
+        help="Groups detailed organization records into a few practical categories.",
     )
     minimum_criteria = st.select_slider(
         "Minimum criteria fulfilled",
@@ -164,12 +173,17 @@ if deployment_seed_is_current(settings.database_path, seed_fingerprint):
         data_status += " refreshed"
 st.caption(data_status)
 
-filtered = filter_prospects(prospects, minimum_criteria, prospect_search)
+filtered = filter_prospects(
+    prospects,
+    minimum_criteria,
+    prospect_search,
+    organization_type_filter,
+)
 filtered_ids = filtered.get("organization_id", pd.Series(dtype=str)).tolist()
 
 if filtered.empty:
     st.info(
-        "No prospects match the current search and criteria filter.",
+        "No prospects match the current search, organization type, and criteria filters.",
         icon=":material/search:",
     )
     st.button(

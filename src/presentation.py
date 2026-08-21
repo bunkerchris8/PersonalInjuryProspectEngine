@@ -14,6 +14,16 @@ CRITERIA_MINIMUMS = {
     "Many": 0.90,
 }
 
+ALL_ORGANIZATION_TYPES = "All organization types"
+ORGANIZATION_TYPE_OPTIONS = (
+    ALL_ORGANIZATION_TYPES,
+    "Workplaces",
+    "Unions and labor",
+    "Community and nonprofit organizations",
+    "Associations and professional groups",
+    "Public agencies and other organizations",
+)
+
 
 def criteria_fulfilled_label(score: object) -> str:
     """Return the plain-language criteria level for a 0-1 quality score."""
@@ -52,16 +62,64 @@ def format_address(
     return ", ".join(parts)
 
 
+def organization_type_category(value: object) -> str:
+    """Group granular source types into readable dashboard categories."""
+    if value is None or pd.isna(value):
+        return "Public agencies and other organizations"
+    normalized = str(value).strip().casefold().replace(" ", "_")
+    if normalized == "workplace" or normalized.endswith("_workplace"):
+        return "Workplaces"
+    if any(
+        term in normalized
+        for term in ("union", "labor", "worker_center", "worker_advocacy", "tradeswomen")
+    ):
+        return "Unions and labor"
+    if any(
+        term in normalized
+        for term in ("association", "professional", "trade_", "chamber", "farm_bureau")
+    ):
+        return "Associations and professional groups"
+    if any(
+        term in normalized
+        for term in (
+            "community",
+            "nonprofit",
+            "support",
+            "services",
+            "faith",
+            "cultural",
+            "advocacy",
+            "housing",
+            "health",
+            "family",
+            "youth",
+            "refugee",
+            "immigrant",
+            "reentry",
+            "recovery",
+            "food_security",
+        )
+    ):
+        return "Community and nonprofit organizations"
+    return "Public agencies and other organizations"
+
+
 def filter_prospects(
     frame: pd.DataFrame,
     minimum_level: str,
     query: str = "",
+    organization_type: str = ALL_ORGANIZATION_TYPES,
 ) -> pd.DataFrame:
-    """Apply the dashboard's quality threshold and plain-text search."""
+    """Apply the dashboard's type, quality, and plain-text filters."""
     minimum_score = minimum_criteria_score(minimum_level)
+    if organization_type not in ORGANIZATION_TYPE_OPTIONS:
+        raise ValueError(f"Unknown organization type: {organization_type}")
     if frame.empty:
         return frame.copy()
     result = frame[frame["data_quality_score"].fillna(0) >= minimum_score].copy()
+    if organization_type != ALL_ORGANIZATION_TYPES:
+        categories = result["organization_type"].map(organization_type_category)
+        result = result[categories == organization_type]
     normalized_query = query.strip().casefold()
     if normalized_query:
         searchable_columns = [

@@ -70,7 +70,21 @@ def test_streamlit_app_features_and_interactions(
         "Many",
     ]
     assert not app.slider
-    assert len(app.selectbox[0].options) == 3
+    organization_filter = next(
+        widget for widget in app.selectbox if widget.label == "Organization type"
+    )
+    assert organization_filter.options == [
+        "All organization types",
+        "Workplaces",
+        "Unions and labor",
+        "Community and nonprofit organizations",
+        "Associations and professional groups",
+        "Public agencies and other organizations",
+    ]
+    prospect_selector = next(
+        widget for widget in app.selectbox if widget.label == "Choose a prospect"
+    )
+    assert len(prospect_selector.options) == 3
     assert [tab.label for tab in app.tabs] == [
         "Overview",
         "Contact information",
@@ -89,10 +103,21 @@ def test_streamlit_app_features_and_interactions(
     assert "Contact email" in prospect_table
     assert prospect_table["Address"].str.len().gt(0).all()
 
+    organization_filter.set_value("Workplaces").run()
+    assert app.info[0].value == (
+        "No prospects match the current search, organization type, and criteria filters."
+    )
+    next(button for button in app.button if button.label == "Clear filters").click().run()
+    assert not app.exception
+    assert app.metric[0].value == "3"
+
     app.select_slider[0].set_value("Many").run()
     assert not app.exception
     assert app.metric[0].value == "2"
-    assert len(app.selectbox[0].options) == 2
+    prospect_selector = next(
+        widget for widget in app.selectbox if widget.label == "Choose a prospect"
+    )
+    assert len(prospect_selector.options) == 2
 
     reviewer = next(widget for widget in app.text_input if widget.label == "Reviewer")
     reviewer.set_value("Should not carry over").run()
@@ -100,7 +125,7 @@ def test_streamlit_app_features_and_interactions(
         widget for widget in app.text_input if widget.label == "Reviewer"
     ).value == "Should not carry over"
 
-    app.selectbox[0].set_value(ids["Teamsters Local 653"]).run()
+    prospect_selector.set_value(ids["Teamsters Local 653"]).run()
     assert not app.exception
     assert "Scoring breakdown for Teamsters Local 653" in [
         subheader.value for subheader in app.subheader
@@ -114,10 +139,16 @@ def test_streamlit_app_features_and_interactions(
     assert not app.exception
 
     app.sidebar.text_input[0].set_value("no matching prospect").run()
-    assert app.info[0].value == "No prospects match the current search and criteria filter."
+    assert app.info[0].value == (
+        "No prospects match the current search, organization type, and criteria filters."
+    )
     next(button for button in app.button if button.label == "Clear filters").click().run()
     assert not app.exception
     assert app.metric[0].value == "3"
+    organization_filter = next(
+        widget for widget in app.selectbox if widget.label == "Organization type"
+    )
+    assert organization_filter.value == "All organization types"
 
 
 def test_streamlit_review_suppression_and_export_controls(
