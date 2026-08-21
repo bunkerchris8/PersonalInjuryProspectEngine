@@ -263,11 +263,16 @@ if filtered.empty:
 
 accessible = filtered if preview_unlocked else filtered.head(RESULTS_PER_PAGE)
 accessible_ids = accessible.get("organization_id", pd.Series(dtype=str)).tolist()
+filtered_ids = filtered.get("organization_id", pd.Series(dtype=str)).tolist()
 
 approved_rows = fetch_approved_prospects_for_export(connection)
-visible_ids = set(accessible_ids)
-visible_approved_count = sum(
-    row["organization_id"] in visible_ids for row in approved_rows
+accessible_id_set = set(accessible_ids)
+filtered_id_set = set(filtered_ids)
+accessible_approved_count = sum(
+    row["organization_id"] in accessible_id_set for row in approved_rows
+)
+total_approved_count = sum(
+    row["organization_id"] in filtered_id_set for row in approved_rows
 )
 
 with st.sidebar:
@@ -285,7 +290,7 @@ with st.sidebar:
         key="export_fields",
         placeholder="Choose at least one column",
     )
-    st.caption(f"{visible_approved_count:,} approved prospects available for this export.")
+    st.caption(f"{accessible_approved_count:,} approved prospects available for this export.")
     if not export_fields:
         st.warning("Choose at least one CSV column.")
         export_data = b""
@@ -295,26 +300,26 @@ with st.sidebar:
             export_fields,
             organization_ids=accessible_ids,
         )
-    if visible_approved_count == 0:
+    if accessible_approved_count == 0:
         st.info("Approve a prospect after human ethics review to make it exportable.")
     st.download_button(
         "Download custom CSV",
         data=export_data,
         file_name="approved_prospects_custom.csv",
         mime="text/csv",
-        disabled=not export_fields or visible_approved_count == 0,
+        disabled=not export_fields or accessible_approved_count == 0,
         on_click="ignore",
         icon=":material/download:",
         width="stretch",
     )
 
-complete_addresses = accessible.apply(
+complete_addresses = filtered.apply(
     lambda row: all(
         has_value(row.get(field)) for field in ("street", "city", "state", "zip")
     ),
     axis=1,
 )
-contact_channels = accessible.apply(
+contact_channels = filtered.apply(
     lambda row: any(
         has_value(row.get(field))
         for field in (
@@ -328,10 +333,14 @@ contact_channels = accessible.apply(
 )
 
 metric_columns = st.columns(4)
-metric_columns[0].metric("Prospects", f"{len(accessible):,}")
+metric_columns[0].metric("Prospects", f"{len(filtered):,}")
 metric_columns[1].metric("Complete addresses", f"{int(complete_addresses.sum()):,}")
 metric_columns[2].metric("With contact information", f"{int(contact_channels.sum()):,}")
-metric_columns[3].metric("Approved", f"{visible_approved_count:,}")
+metric_columns[3].metric("Approved", f"{total_approved_count:,}")
+st.caption(
+    "Summary totals include every matching prospect. Preview mode limits only the "
+    f"record-level views to {RESULTS_PER_PAGE} results."
+)
 
 st.subheader("Prospect breakdown")
 if preview_unlocked:
