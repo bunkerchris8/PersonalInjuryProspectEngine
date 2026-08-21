@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import importlib
+import os
 import sqlite3
 
 import pandas as pd
@@ -51,6 +54,14 @@ deployment_seed_is_current = deployment_helpers.deployment_seed_is_current
 materialize_deployment_seed = deployment_helpers.materialize_deployment_seed
 
 
+RESULTS_PER_PAGE = 20
+# Default digest for the owner-provided preview code. Set
+# PROSPECT_ENGINE_PREVIEW_UNLOCK_CODE in Streamlit secrets to rotate it.
+DEFAULT_PREVIEW_UNLOCK_DIGEST = (
+    "56bd44e732d03a6d5dc5828c0f634fde0f9078c69361e855752910c412784539"
+)
+
+
 settings = load_settings()
 st.set_page_config(
     page_title=settings.app_name,
@@ -79,6 +90,22 @@ def reset_prospect_filters() -> None:
     st.session_state.minimum_criteria = "Not much"
     st.session_state.organization_type_filter = ALL_ORGANIZATION_TYPES
     st.session_state.prospect_search = ""
+    st.session_state.pop("results_page", None)
+
+
+def reset_results_page() -> None:
+    st.session_state.pop("results_page", None)
+
+
+def preview_code_matches(candidate: str) -> bool:
+    configured_code = os.getenv("PROSPECT_ENGINE_PREVIEW_UNLOCK_CODE")
+    expected_digest = (
+        hashlib.sha256(configured_code.encode()).hexdigest()
+        if configured_code
+        else DEFAULT_PREVIEW_UNLOCK_DIGEST
+    )
+    candidate_digest = hashlib.sha256(candidate.encode()).hexdigest()
+    return hmac.compare_digest(candidate_digest, expected_digest)
 
 
 def has_value(value: object) -> bool:
@@ -102,24 +129,66 @@ with st.sidebar:
         key="prospect_search",
         placeholder="Name, city, ZIP, or contact",
         icon=":material/search:",
+        on_change=reset_results_page,
     )
     organization_type_filter = st.selectbox(
         "Organization type",
         options=ORGANIZATION_TYPE_OPTIONS,
         key="organization_type_filter",
         help="Groups detailed organization records into a few practical categories.",
+        on_change=reset_results_page,
     )
     minimum_criteria = st.select_slider(
         "Minimum criteria fulfilled",
         options=CRITERIA_LEVELS,
         value="Not much",
         key="minimum_criteria",
+        on_change=reset_results_page,
         help=(
             "This combines verified-source strength, sourced-field coverage, freshness, "
             "identity confidence, and source conflicts."
         ),
     )
     st.caption("Not much means fewer criteria are documented; many means nearly all are.")
+    st.divider()
+    if st.session_state.get("preview_unlocked", False):
+        st.success("Full prospect access is unlocked.", icon=":material/lock_open:")
+        if st.button(
+            "Return to preview mode",
+            icon=":material/lock:",
+            width="stretch",
+        ):
+            st.session_state.preview_unlocked = False
+            st.session_state.pop("results_page", None)
+            st.rerun()
+    else:
+        st.subheader("Unlock full results")
+        st.caption(
+            f"Preview mode shows up to {RESULTS_PER_PAGE} matching prospects. "
+            "Enter the access code to browse every matching result."
+        )
+        with st.form("preview_unlock_form", border=False):
+            preview_code = st.text_input(
+                "Access code",
+                type="password",
+                key="preview_unlock_code",
+                icon=":material/key:",
+            )
+            unlock_submitted = st.form_submit_button(
+                "Unlock full results",
+                type="primary",
+                icon=":material/lock_open:",
+                width="stretch",
+            )
+        if unlock_submitted:
+            if preview_code_matches(preview_code or ""):
+                st.session_state.preview_unlocked = True
+                st.session_state.pop("results_page", None)
+                st.rerun()
+            else:
+                st.error("That access code is not valid.", icon=":material/error:")
+
+preview_unlocked = bool(st.session_state.get("preview_unlocked", False))
 
 seed_archive_path = (
     str(settings.deployment_seed_path) if settings.deployment_seed_path else None
@@ -179,7 +248,6 @@ filtered = filter_prospects(
     prospect_search,
     organization_type_filter,
 )
-filtered_ids = filtered.get("organization_id", pd.Series(dtype=str)).tolist()
 
 if filtered.empty:
     st.info(
@@ -193,8 +261,11 @@ if filtered.empty:
     )
     st.stop()
 
+accessible = filtered if preview_unlocked else filtered.head(RESULTS_PER_PAGE)
+accessible_ids = accessible.get("organization_id", pd.Series(dtype=str)).tolist()
+
 approved_rows = fetch_approved_prospects_for_export(connection)
-visible_ids = set(filtered_ids)
+visible_ids = set(accessible_ids)
 visible_approved_count = sum(
     row["organization_id"] in visible_ids for row in approved_rows
 )
@@ -204,7 +275,7 @@ with st.sidebar:
     st.subheader("Build a CSV list")
     st.caption(
         "Choose any combination of fields. Exports include only approved, "
-        "non-suppressed prospects currently shown."
+        "non-suppressed prospects currently accessible."
     )
     export_fields = st.multiselect(
         "CSV columns",
@@ -222,7 +293,7 @@ with st.sidebar:
         export_data = approved_prospects_csv(
             connection,
             export_fields,
-            organization_ids=filtered_ids,
+            organization_ids=accessible_ids,
         )
     if visible_approved_count == 0:
         st.info("Approve a prospect after human ethics review to make it exportable.")
@@ -237,13 +308,13 @@ with st.sidebar:
         width="stretch",
     )
 
-complete_addresses = filtered.apply(
+complete_addresses = accessible.apply(
     lambda row: all(
         has_value(row.get(field)) for field in ("street", "city", "state", "zip")
     ),
     axis=1,
 )
-contact_channels = filtered.apply(
+contact_channels = accessible.apply(
     lambda row: any(
         has_value(row.get(field))
         for field in (
@@ -257,31 +328,58 @@ contact_channels = filtered.apply(
 )
 
 metric_columns = st.columns(4)
-metric_columns[0].metric("Prospects", f"{len(filtered):,}")
+metric_columns[0].metric("Prospects", f"{len(accessible):,}")
 metric_columns[1].metric("Complete addresses", f"{int(complete_addresses.sum()):,}")
 metric_columns[2].metric("With contact information", f"{int(contact_channels.sum()):,}")
 metric_columns[3].metric("Approved", f"{visible_approved_count:,}")
 
 st.subheader("Prospect breakdown")
-st.caption(
-    f"These summaries include all {len(filtered):,} prospects currently shown—not only "
-    "the prospect selected below."
-)
+if preview_unlocked:
+    st.caption(
+        f"These summaries include all {len(filtered):,} matching prospects—not only "
+        "the current results page."
+    )
+else:
+    st.caption(
+        f"These summaries include the {len(accessible):,} accessible preview prospects. "
+        "Unlock full results to include every match."
+    )
 st.markdown("**By Criteria fulfilled**")
 st.bar_chart(
-    criteria_breakdown(filtered),
+    criteria_breakdown(accessible),
     x="Criteria fulfilled",
     y="Prospects",
     height=260,
 )
 
 st.subheader("Prospects")
-st.caption(
-    "Addresses and available organization or professional contact channels appear first. "
-    "Blank contact fields mean the information has not yet been verified and stored."
-)
-table = build_prospect_table(filtered)
-st.dataframe(
+results_caption = st.empty()
+table_slot = st.empty()
+total_pages = max(1, (len(accessible) + RESULTS_PER_PAGE - 1) // RESULTS_PER_PAGE)
+if preview_unlocked and total_pages > 1:
+    with st.container(horizontal_alignment="right"):
+        current_page = st.pagination(
+            total_pages,
+            key="results_page",
+            max_visible_pages=7,
+        )
+else:
+    current_page = 1
+start_index = (current_page - 1) * RESULTS_PER_PAGE
+end_index = min(start_index + RESULTS_PER_PAGE, len(accessible))
+page_rows = accessible.iloc[start_index:end_index].copy()
+if preview_unlocked:
+    results_caption.caption(
+        f"Showing {start_index + 1:,}–{end_index:,} of {len(accessible):,} matching "
+        "prospects. Blank contact fields have not been verified and stored."
+    )
+else:
+    results_caption.caption(
+        f"Showing {len(page_rows):,} preview prospects. Unlock full results to browse "
+        "additional matches."
+    )
+table = build_prospect_table(page_rows)
+table_slot.dataframe(
     table,
     hide_index=True,
     height=520,
@@ -303,14 +401,15 @@ st.dataframe(
     },
 )
 
-map_rows = filtered.dropna(subset=["latitude", "longitude"])
+map_rows = page_rows.dropna(subset=["latitude", "longitude"])
 st.subheader("Prospect locations")
 if map_rows.empty:
     st.info("No mapped coordinates are available for the prospects currently shown.")
 else:
     st.caption(
-        f"{len(map_rows):,} of {len(filtered):,} visible prospects have verified coordinates. "
-        "Their complete mailing addresses remain available in the table and detail view."
+        f"{len(map_rows):,} of {len(page_rows):,} prospects on this page have verified "
+        "coordinates. Their complete mailing addresses remain available in the table "
+        "and detail view."
     )
     st.map(
         map_rows[["latitude", "longitude"]],
@@ -325,14 +424,14 @@ labels = {
         f"{row['canonical_name']} — "
         f"{format_address(row.get('street'), row.get('city'), row.get('state'), row.get('zip'))}"
     )
-    for _, row in filtered.iterrows()
+    for _, row in page_rows.iterrows()
 }
 selected_id = st.selectbox(
     "Choose a prospect",
     options=list(labels),
     format_func=lambda value: labels[value],
     key="selected_prospect",
-    help=f"All {len(filtered):,} prospects currently shown are available here.",
+    help=f"All {len(page_rows):,} prospects on this results page are available here.",
 )
 
 detail = fetch_organization_detail(connection, selected_id)

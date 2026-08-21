@@ -92,6 +92,20 @@ review and suppression changes still write to local SQLite. Streamlit Community 
 not guarantee persistence for local files. Use durable external storage before relying on
 those changes as the system of record.
 
+The public dashboard runs in preview mode and exposes at most 20 matching records. Entering
+the owner-provided access code unlocks all matching records for that browser session, still
+paginated at 20 records per page. The code is compared server-side and is never placed in the
+URL. To rotate it without changing the repository, add this root-level value in Streamlit
+Community Cloud under **App settings → Secrets**:
+
+```toml
+PROSPECT_ENGINE_PREVIEW_UNLOCK_CODE = "replace-with-a-new-code"
+```
+
+For local development, the same setting can be added to the ignored `.env` file. This preview
+gate is a lightweight content control, not user authentication; use an identity-aware hosting
+or authentication layer if the underlying records become confidential.
+
 ## Import commands
 
 Blank templates live in `data/raw/templates/`. Every imported material fact requires source metadata, including URL, publisher, title, retrieval date, source strength, source type, raw identifier, and validation status.

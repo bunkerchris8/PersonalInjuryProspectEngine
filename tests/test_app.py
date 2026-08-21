@@ -52,6 +52,9 @@ def test_streamlit_app_features_and_interactions(
     )
 
     monkeypatch.setenv("PROSPECT_ENGINE_DATABASE_PATH", str(settings.database_path))
+    monkeypatch.setenv(
+        "PROSPECT_ENGINE_PREVIEW_UNLOCK_CODE", "test-preview-access-code"
+    )
     app = AppTest.from_file(PROJECT_ROOT / "app.py", default_timeout=15).run()
 
     assert not app.exception
@@ -103,6 +106,35 @@ def test_streamlit_app_features_and_interactions(
     assert "Contact email" in prospect_table
     assert prospect_table["Address"].str.len().gt(0).all()
 
+    access_code = next(
+        widget for widget in app.text_input if widget.label == "Access code"
+    )
+    access_code.set_value("incorrect")
+    next(
+        button for button in app.button if button.label == "Unlock full results"
+    ).click().run()
+    assert app.error[0].value == "That access code is not valid."
+
+    access_code = next(
+        widget for widget in app.text_input if widget.label == "Access code"
+    )
+    access_code.set_value("test-preview-access-code")
+    next(
+        button for button in app.button if button.label == "Unlock full results"
+    ).click().run()
+    assert not app.exception
+    assert any(
+        item.value == "Full prospect access is unlocked." for item in app.success
+    )
+    next(
+        button for button in app.button if button.label == "Return to preview mode"
+    ).click().run()
+    assert not app.exception
+    assert any(widget.label == "Access code" for widget in app.text_input)
+
+    organization_filter = next(
+        widget for widget in app.selectbox if widget.label == "Organization type"
+    )
     organization_filter.set_value("Workplaces").run()
     assert app.info[0].value == (
         "No prospects match the current search, organization type, and criteria filters."
